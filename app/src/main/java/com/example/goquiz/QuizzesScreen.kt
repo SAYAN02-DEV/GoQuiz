@@ -9,6 +9,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -235,7 +236,7 @@ fun QuizzesScreen() {
             ) {
                 BottomNavItem(icon = Icons.Rounded.Home, label = "Home", isSelected = false)
                 BottomNavItem(icon = Icons.Rounded.Search, label = "Explore", isSelected = true)
-                BottomNavItem(icon = Icons.Rounded.List, label = "My Library", isSelected = false)
+                BottomNavItem(icon = Icons.AutoMirrored.Rounded.FormatListBulleted, label = "My Library", isSelected = false)
                 BottomNavItem(icon = Icons.Rounded.Person, label = "Profile", isSelected = false)
             }
         }

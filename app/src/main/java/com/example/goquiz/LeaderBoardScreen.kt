@@ -10,6 +10,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -323,10 +324,10 @@ fun LeaderBoardScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BottomNavItem(icon = Icons.Rounded.Home,       label = "Home",    isSelected = false)
-                BottomNavItem(icon = Icons.Rounded.List,       label = "Quiz",    isSelected = false)
-                BottomNavItem(icon = Icons.Rounded.Star,       label = "Ranking", isSelected = true)
-                BottomNavItem(icon = Icons.Rounded.Person,     label = "Profile", isSelected = false)
+                BottomNavItem(icon = Icons.Rounded.Home,                            label = "Home",    isSelected = false)
+                BottomNavItem(icon = Icons.AutoMirrored.Rounded.FormatListBulleted, label = "Quiz",    isSelected = false)
+                BottomNavItem(icon = Icons.Rounded.Star,                            label = "Ranking", isSelected = true)
+                BottomNavItem(icon = Icons.Rounded.Person,                          label = "Profile", isSelected = false)
             }
         }
     }
