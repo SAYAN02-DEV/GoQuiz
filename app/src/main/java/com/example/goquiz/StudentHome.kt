@@ -11,6 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -179,7 +180,7 @@ fun StudentHomeScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BottomNavItem(icon = Icons.Rounded.Home, label = "Home", isSelected = true)
-                BottomNavItem(icon = Icons.Rounded.List, label = "Quizzes", isSelected = false)
+                BottomNavItem(icon = Icons.AutoMirrored.Rounded.FormatListBulleted, label = "Quizzes", isSelected = false)
                 BottomNavItem(icon = Icons.Rounded.Person, label = "Profile", isSelected = false)
             }
         }
@@ -267,7 +268,7 @@ fun QuizCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    Icon(Icons.Rounded.List, contentDescription = null, tint = TextGray, modifier = Modifier.size(14.dp))
+                    Icon(Icons.AutoMirrored.Rounded.FormatListBulleted, contentDescription = null, tint = TextGray, modifier = Modifier.size(14.dp))
                     Text(text = questions, color = TextGray, fontSize = 12.sp)
                 }
             }
