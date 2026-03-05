@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Quiz Results - Sunset Orange</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#f27f0d",
+                        "coral": "#ff6b6b",
+                        "background-light": "#f8f7f5",
+                        "background-dark": "#221910",
+                    },
+                    fontFamily: {
+                        "display": ["Lexend"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+          min-height: max(884px, 100dvh);
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="relative flex h-auto min-h-screen w-full flex-col max-w-md mx-auto overflow-x-hidden">
+    <!-- Top Bar -->
+    <div class="flex items-center bg-transparent p-4 justify-between">
+        <div class="text-slate-900 dark:text-slate-100 flex size-12 shrink-0 items-center justify-start">
+            <span class="material-symbols-outlined cursor-pointer">arrow_back</span>
+        </div>
+        <h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-tight flex-1 text-center">Quiz Results</h2>
+        <div class="flex w-12 items-center justify-end">
+            <button class="flex items-center justify-center rounded-xl h-12 bg-transparent text-slate-900 dark:text-slate-100 p-0">
+                <span class="material-symbols-outlined">share</span>
+            </button>
+        </div>
+    </div>
+    <!-- Hero Score Section -->
+    <div class="flex flex-col items-center px-4 py-8">
+        <div class="relative flex items-center justify-center">
+            <!-- Circular Progress Ring -->
+            <svg class="w-48 h-48 transform -rotate-90">
+                <circle class="text-primary/10" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" stroke-width="12"></circle>
+                <circle class="text-primary" cx="96" cy="96" fill="transparent" r="88" stroke="currentColor" stroke-dasharray="553" stroke-dashoffset="83" stroke-linecap="round" stroke-width="12"></circle>
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span class="text-5xl font-bold text-slate-900 dark:text-slate-100">85%</span>
+                <span class="text-sm font-medium text-slate-500">Overall Score</span>
+            </div>
+        </div>
+        <h1 class="text-3xl font-bold leading-tight mt-8 text-center text-slate-900 dark:text-slate-100">Excellent Work!</h1>
+        <p class="text-primary font-medium mt-2">You're in the top 10% of learners!</p>
+    </div>
+    <!-- Summary Stats -->
+    <div class="flex flex-wrap gap-4 p-4">
+        <div class="flex min-w-[150px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-green-500">check_circle</span>
+                <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Correct</p>
+            </div>
+            <p class="text-slate-900 dark:text-slate-100 text-3xl font-bold">8</p>
+        </div>
+        <div class="flex min-w-[150px] flex-1 flex-col gap-2 rounded-xl p-6 bg-white dark:bg-background-dark border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex items-center gap-2">
+                <span class="material-symbols-outlined text-coral">cancel</span>
+                <p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Incorrect</p>
+            </div>
+            <p class="text-slate-900 dark:text-slate-100 text-3xl font-bold">2</p>
+        </div>
+    </div>
+    <!-- AI Insights & Review Section -->
+    <div class="p-4 space-y-4">
+        <div class="flex items-center justify-between pb-2">
+            <h2 class="text-xl font-bold text-slate-900 dark:text-slate-100">Review &amp; AI Insights</h2>
+            <span class="material-symbols-outlined text-primary">auto_awesome</span>
+        </div>
+        <!-- Review Question 1 -->
+        <div class="bg-white dark:bg-background-dark rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex justify-between items-start mb-3">
+                <span class="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded">Question 4</span>
+                <span class="material-symbols-outlined text-coral">close</span>
+            </div>
+            <p class="text-slate-900 dark:text-slate-100 font-medium mb-4">What is the primary function of the mitochondria in a cell?</p>
+            <div class="space-y-2 mb-4">
+                <div class="p-3 rounded-lg border border-coral/30 bg-coral/5 text-sm">
+                    <span class="block text-xs text-coral font-bold uppercase mb-1">Your Answer</span>
+                    Protein synthesis
+                </div>
+                <div class="p-3 rounded-lg border border-green-500/30 bg-green-500/5 text-sm">
+                    <span class="block text-xs text-green-600 font-bold uppercase mb-1">Correct Answer</span>
+                    Energy production (ATP)
+                </div>
+            </div>
+            <!-- AI Explanation -->
+            <div class="bg-slate-50 dark:bg-slate-900/50 p-4 rounded-lg border-l-4 border-primary">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="material-symbols-outlined text-primary text-sm">smart_toy</span>
+                    <span class="text-xs font-bold text-slate-700 dark:text-slate-300">AI EXPLANATION</span>
+                </div>
+                <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                    The mitochondria are known as the "powerhouse" of the cell. They generate chemical energy in the form of ATP through cellular respiration. Ribosomes, not mitochondria, are responsible for protein synthesis.
+                </p>
+            </div>
+        </div>
+        <!-- Review Question 2 -->
+        <div class="bg-white dark:bg-background-dark rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div class="flex justify-between items-start mb-3">
+                <span class="bg-primary/10 text-primary text-xs font-bold px-2 py-1 rounded">Question 7</span>
+                <span class="material-symbols-outlined text-green-500">check</span>
+            </div>
+            <p class="text-slate-900 dark:text-slate-100 font-medium mb-4">Which planet is known as the Red Planet?</p>
+            <div class="p-3 rounded-lg border border-green-500/30 bg-green-500/5 text-sm">
+                <span class="block text-xs text-green-600 font-bold uppercase mb-1">Your Answer</span>
+                Mars
+            </div>
+        </div>
+    </div>
+    <!-- Action Buttons -->
+    <div class="p-4 flex flex-col gap-3 mt-4 mb-8">
+        <button class="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg transition-colors flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">refresh</span>
+            Retake Quiz
+        </button>
+        <button class="w-full bg-white dark:bg-background-dark border-2 border-primary text-primary font-bold py-4 rounded-xl hover:bg-primary/5 transition-colors flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined">share</span>
+            Share Results
+        </button>
+    </div>
+    <!-- Decorative background elements -->
+    <div class="fixed top-0 right-0 -z-10 w-64 h-64 bg-primary/10 blur-[100px] rounded-full"></div>
+    <div class="fixed bottom-0 left-0 -z-10 w-64 h-64 bg-coral/10 blur-[100px] rounded-full"></div>
+</div>
+</body></html>
