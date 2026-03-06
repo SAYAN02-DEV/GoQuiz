@@ -1,5 +1,6 @@
 package com.example.goquiz
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -55,7 +56,17 @@ class LeaderBoardActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             LeaderBoardScreen(
-                onBack = { finish() }
+                onBack = { finish() },
+                onNavigateToHome = {
+                    startActivity(Intent(this, StudentHome::class.java))
+                    finish()
+                },
+                onNavigateToQuizzes = {
+                    startActivity(Intent(this, QuizzesActivity::class.java))
+                },
+                onNavigateToProfile = {
+                    startActivity(Intent(this, UserProfileActivity::class.java))
+                }
             )
         }
     }
@@ -64,7 +75,10 @@ class LeaderBoardActivity : ComponentActivity() {
 // ── Screen ────────────────────────────────────────────────────────────────────
 @Composable
 fun LeaderBoardScreen(
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToQuizzes: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
     var selectedScope by remember { mutableStateOf("Global") }
 
@@ -341,10 +355,9 @@ fun LeaderBoardScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BottomNavItem(icon = Icons.Rounded.Home,                            label = "Home",    isSelected = false)
-                BottomNavItem(icon = Icons.AutoMirrored.Rounded.FormatListBulleted, label = "Quiz",    isSelected = false)
-                BottomNavItem(icon = Icons.Rounded.Star,                            label = "Ranking", isSelected = true)
-                BottomNavItem(icon = Icons.Rounded.Person,                          label = "Profile", isSelected = false)
+                BottomNavItem(icon = Icons.Rounded.Home,                            label = "Home",    isSelected = false, onClick = onNavigateToHome)
+                BottomNavItem(icon = Icons.AutoMirrored.Rounded.FormatListBulleted, label = "Quizzes", isSelected = false, onClick = onNavigateToQuizzes)
+                BottomNavItem(icon = Icons.Rounded.Person,                          label = "Profile", isSelected = false, onClick = onNavigateToProfile)
             }
         }
     }
