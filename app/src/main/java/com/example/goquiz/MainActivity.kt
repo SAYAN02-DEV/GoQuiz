@@ -1,5 +1,6 @@
 package com.example.goquiz
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -205,8 +207,12 @@ fun HeroImageSection() {
 fun ActionButtons() {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // "Get Started" Gradient Button
+        val context = LocalContext.current
         Button(
-            onClick = { /* TODO: Navigate */ },
+            onClick = {
+                val intent = Intent(context, StudentHome::class.java)
+                context.startActivity(intent)
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
