@@ -50,7 +50,14 @@ class QuizzesActivity : ComponentActivity() {
                 onQuizClick = {
                     startActivity(Intent(this, QuizTestActivity::class.java))
                 },
-                onBack = { finish() }
+                onBack = { finish() },
+                onNavigateToHome = {
+                    startActivity(Intent(this, StudentHome::class.java))
+                    finish()
+                },
+                onNavigateToProfile = {
+                    startActivity(Intent(this, UserProfileActivity::class.java))
+                }
             )
         }
     }
@@ -60,7 +67,9 @@ class QuizzesActivity : ComponentActivity() {
 @Composable
 fun QuizzesScreen(
     onQuizClick: () -> Unit = {},
-    onBack: () -> Unit = {}
+    onBack: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
 ) {
     val categories = listOf("All Topics", "Mathematics", "Programming", "Physics")
     var selectedCategory by remember { mutableStateOf("All Topics") }
@@ -258,10 +267,9 @@ fun QuizzesScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BottomNavItem(icon = Icons.Rounded.Home, label = "Home", isSelected = false)
-                BottomNavItem(icon = Icons.Rounded.Search, label = "Explore", isSelected = true)
-                BottomNavItem(icon = Icons.AutoMirrored.Rounded.FormatListBulleted, label = "My Library", isSelected = false)
-                BottomNavItem(icon = Icons.Rounded.Person, label = "Profile", isSelected = false)
+                BottomNavItem(icon = Icons.Rounded.Home, label = "Home", isSelected = false, onClick = onNavigateToHome)
+                BottomNavItem(icon = Icons.AutoMirrored.Rounded.FormatListBulleted, label = "Quizzes", isSelected = true)
+                BottomNavItem(icon = Icons.Rounded.Person, label = "Profile", isSelected = false, onClick = onNavigateToProfile)
             }
         }
     }

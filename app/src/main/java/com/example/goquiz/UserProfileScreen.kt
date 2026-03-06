@@ -1,5 +1,6 @@
 package com.example.goquiz
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
 import androidx.compose.material.icons.automirrored.rounded.Assignment
+import androidx.compose.material.icons.automirrored.rounded.FormatListBulleted
 import androidx.compose.material.icons.automirrored.rounded.Logout
 import androidx.compose.material.icons.rounded.*
 import androidx.compose.material3.*
@@ -42,7 +44,14 @@ class UserProfileActivity : ComponentActivity() {
         setContent {
             UserProfileScreen(
                 onBack = { finish() },
-                onShare = { /* TODO: Share profile */ }
+                onShare = { /* TODO: Share profile */ },
+                onNavigateToHome = {
+                    startActivity(Intent(this, StudentHome::class.java))
+                    finish()
+                },
+                onNavigateToQuizzes = {
+                    startActivity(Intent(this, QuizzesActivity::class.java))
+                }
             )
         }
     }
@@ -52,7 +61,9 @@ class UserProfileActivity : ComponentActivity() {
 @Composable
 fun UserProfileScreen(
     onBack: () -> Unit = {},
-    onShare: () -> Unit = {}
+    onShare: () -> Unit = {},
+    onNavigateToHome: () -> Unit = {},
+    onNavigateToQuizzes: () -> Unit = {}
 ) {
     var selectedTab by remember { mutableStateOf("My Insights") }
     var notificationsEnabled by remember { mutableStateOf(true) }
@@ -445,10 +456,9 @@ fun UserProfileScreen(
                 horizontalArrangement = Arrangement.SpaceEvenly,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                BottomNavItem(icon = Icons.Rounded.Home,                        label = "Home",    isSelected = false)
-                BottomNavItem(icon = Icons.Rounded.School,                      label = "Courses", isSelected = false)
-                BottomNavItem(icon = Icons.AutoMirrored.Rounded.Assignment,     label = "Tests",   isSelected = false)
-                BottomNavItem(icon = Icons.Rounded.Person,                      label = "Profile", isSelected = true)
+                BottomNavItem(icon = Icons.Rounded.Home,                            label = "Home",    isSelected = false, onClick = onNavigateToHome)
+                BottomNavItem(icon = Icons.AutoMirrored.Rounded.FormatListBulleted, label = "Quizzes", isSelected = false, onClick = onNavigateToQuizzes)
+                BottomNavItem(icon = Icons.Rounded.Person,                          label = "Profile", isSelected = true)
             }
         }
     }
