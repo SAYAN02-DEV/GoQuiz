@@ -29,6 +29,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -231,12 +232,15 @@ fun QuizResultScreen(
                 Spacer(modifier = Modifier.height(16.dp))
 
                 // View Leaderboard button
+                val context = LocalContext.current
                 Surface(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp)
                         .height(56.dp)
-                        .clickable { /* TODO: Navigate to Leaderboard */ },
+                        .clickable {
+                            context.startActivity(Intent(context, LeaderBoardActivity::class.java))
+                        },
                     shape = RoundedCornerShape(14.dp),
                     color = PrimaryOrange
                 ) {
