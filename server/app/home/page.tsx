@@ -23,6 +23,7 @@ export default function QuizAILanding() {
 
         {/* ── Hero ── */}
         <section className="hero">
+          <div className="hero-grid" />
           <div className="hero-inner">
             <div className="hero-content">
               <div className="hero-badge">
