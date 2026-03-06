@@ -1,5 +1,10 @@
 package com.example.goquiz
 
+import android.content.Intent
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -35,9 +40,28 @@ data class QuizItem(
     val gradientColors: List<Color>
 )
 
+// ── Activity ──────────────────────────────────────────────────────────────────
+class QuizzesActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            QuizzesScreen(
+                onQuizClick = {
+                    startActivity(Intent(this, QuizTestActivity::class.java))
+                },
+                onBack = { finish() }
+            )
+        }
+    }
+}
+
 // ── Screen ────────────────────────────────────────────────────────────────────
 @Composable
-fun QuizzesScreen() {
+fun QuizzesScreen(
+    onQuizClick: () -> Unit = {},
+    onBack: () -> Unit = {}
+) {
     val categories = listOf("All Topics", "Mathematics", "Programming", "Physics")
     var selectedCategory by remember { mutableStateOf("All Topics") }
     var searchQuery by remember { mutableStateOf("") }

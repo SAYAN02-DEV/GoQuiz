@@ -1,5 +1,9 @@
 package com.example.goquiz
 
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -43,6 +47,19 @@ private val sampleEntries = listOf(
     LeaderEntry(6,  "Chloe Wang",      1820, 15, "CW", Color(0xFFFED7AA)),
     LeaderEntry(7,  "David Miller",    1745, 10, "DM", Color(0xFFE9D5FF)),
 )
+
+// ── Activity ──────────────────────────────────────────────────────────────────
+class LeaderBoardActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            LeaderBoardScreen(
+                onBack = { finish() }
+            )
+        }
+    }
+}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 @Composable

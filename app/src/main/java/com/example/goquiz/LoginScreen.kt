@@ -1,5 +1,10 @@
 package com.example.goquiz
 
+import android.content.Intent
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -40,6 +45,26 @@ private val LoginTextGray = Color(0xFF64748B)
 private val LoginSurface = Color(0xFFF1F5F9)
 private val LoginBorder = Color(0xFFE2E8F0)
 private val LoginDivider = Color(0xFFCBD5E1)
+
+// ── Activity ──────────────────────────────────────────────────────────────────
+class LoginActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            LoginScreen(
+                onLoginWithGoogle = { /* TODO: Google Auth */ },
+                onLoginWithFacebook = { /* TODO: Facebook Auth */ },
+                onEmailLogin = { _, _ ->
+                    startActivity(Intent(this, StudentHome::class.java))
+                    finish()
+                },
+                onCreateAccount = { /* TODO: Navigate to Register */ },
+                onForgotPassword = { /* TODO: Navigate to Reset */ }
+            )
+        }
+    }
+}
 
 @Composable
 fun LoginScreen(

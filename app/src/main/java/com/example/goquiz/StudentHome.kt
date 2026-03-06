@@ -1,5 +1,6 @@
 package com.example.goquiz
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -34,13 +35,27 @@ class StudentHome : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            StudentHomeScreen()
+            StudentHomeScreen(
+                onStartQuiz = {
+                    startActivity(Intent(this, QuizTestActivity::class.java))
+                },
+                onNavigateToQuizzes = {
+                    startActivity(Intent(this, QuizzesActivity::class.java))
+                },
+                onNavigateToProfile = {
+                    startActivity(Intent(this, UserProfileActivity::class.java))
+                }
+            )
         }
     }
 }
 
 @Composable
-fun StudentHomeScreen() {
+fun StudentHomeScreen(
+    onStartQuiz: () -> Unit = {},
+    onNavigateToQuizzes: () -> Unit = {},
+    onNavigateToProfile: () -> Unit = {}
+) {
     val calendar = Calendar.getInstance()
     val formatter = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
     val current = formatter.format(calendar.time)
@@ -144,7 +159,7 @@ fun StudentHomeScreen() {
                 questions = "20 Questions",
                 dueDate = "Due: Today",
                 isAvailable = true,
-                onStartClick = { /* TODO */ }
+                onStartClick = onStartQuiz
             )
 
             Spacer(modifier = Modifier.height(28.dp))
@@ -180,8 +195,8 @@ fun StudentHomeScreen() {
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 BottomNavItem(icon = Icons.Rounded.Home, label = "Home", isSelected = true)
-                BottomNavItem(icon = Icons.AutoMirrored.Rounded.FormatListBulleted, label = "Quizzes", isSelected = false)
-                BottomNavItem(icon = Icons.Rounded.Person, label = "Profile", isSelected = false)
+                BottomNavItem(icon = Icons.AutoMirrored.Rounded.FormatListBulleted, label = "Quizzes", isSelected = false, onClick = onNavigateToQuizzes)
+                BottomNavItem(icon = Icons.Rounded.Person, label = "Profile", isSelected = false, onClick = onNavigateToProfile)
             }
         }
     }
