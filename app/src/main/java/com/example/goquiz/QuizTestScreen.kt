@@ -1,5 +1,10 @@
 package com.example.goquiz
 
+import android.content.Intent
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -67,6 +72,27 @@ private val sampleQuestions = listOf(
         correctIndex = 3
     )
 )
+
+// ── Activity ──────────────────────────────────────────────────────────────────
+class QuizTestActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            QuizTestScreen(
+                onFinish = { score, total ->
+                    val intent = Intent()
+                    intent.setClassName(this@QuizTestActivity, "com.example.goquiz.QuizResultActivity")
+                    intent.putExtra("score", score)
+                    intent.putExtra("total", total)
+                    startActivity(intent)
+                    finish()
+                },
+                onBack = { finish() }
+            )
+        }
+    }
+}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 @Composable

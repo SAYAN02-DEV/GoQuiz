@@ -1,5 +1,6 @@
 package com.example.goquiz
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -7,6 +8,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.*
@@ -17,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -63,9 +67,10 @@ fun WelcomeScreen() {
         Column(
             modifier = Modifier
                 .weight(1f)
-                .padding(horizontal = 24.dp),
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 24.dp, vertical = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
             HeroImageSection()
 
@@ -103,6 +108,8 @@ fun WelcomeScreen() {
 
             // Action Buttons
             ActionButtons()
+
+            Spacer(modifier = Modifier.height(16.dp))
         }
 
         // Bottom Navigation Bar
@@ -146,6 +153,7 @@ fun HeroImageSection() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(max = 280.dp)
             .aspectRatio(1f) // Makes it a perfect square
     ) {
         // Background subtle gradient box
@@ -203,10 +211,13 @@ fun HeroImageSection() {
 
 @Composable
 fun ActionButtons() {
+    val context = LocalContext.current
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         // "Get Started" Gradient Button
         Button(
-            onClick = { /* TODO: Navigate */ },
+            onClick = {
+                context.startActivity(Intent(context, StudentHome::class.java))
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp),
@@ -228,7 +239,7 @@ fun ActionButtons() {
             modifier = Modifier
                 .fillMaxWidth()
                 .height(56.dp)
-                .clickable { /* TODO: Navigate */ },
+                .clickable { context.startActivity(Intent(context, QuizzesActivity::class.java)) },
             color = PrimaryOrange.copy(alpha = 0.1f),
             shape = RoundedCornerShape(12.dp),
             border = androidx.compose.foundation.BorderStroke(1.dp, PrimaryOrange.copy(alpha = 0.2f))
@@ -243,6 +254,7 @@ fun ActionButtons() {
 @Composable
 @Suppress("DEPRECATION")
 fun BottomNav() {
+    val context = LocalContext.current
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -252,18 +264,25 @@ fun BottomNav() {
         verticalAlignment = Alignment.CenterVertically
     ) {
         BottomNavItem(icon = Icons.Rounded.Home, label = "Home", isSelected = true)
-        BottomNavItem(icon = Icons.Rounded.List, label = "Quizzes", isSelected = false)
-        BottomNavItem(icon = Icons.Rounded.Person, label = "Profile", isSelected = false)
+        BottomNavItem(icon = Icons.Rounded.List, label = "Quizzes", isSelected = false,
+            onClick = { context.startActivity(Intent(context, QuizzesActivity::class.java)) })
+        BottomNavItem(icon = Icons.Rounded.Person, label = "Profile", isSelected = false,
+            onClick = { context.startActivity(Intent(context, UserProfileActivity::class.java)) })
     }
 }
 
 @Composable
-fun BottomNavItem(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, isSelected: Boolean) {
+fun BottomNavItem(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    label: String,
+    isSelected: Boolean,
+    onClick: () -> Unit = {}
+) {
     val color = if (isSelected) PrimaryOrange else TextGray.copy(alpha = 0.5f)
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
-        modifier = Modifier.clickable { /* TODO: Handle Click */ }
+        modifier = Modifier.clickable { onClick() }
     ) {
         Icon(icon, contentDescription = label, tint = color)
         Text(label, fontSize = 12.sp, color = color, fontWeight = FontWeight.Medium)

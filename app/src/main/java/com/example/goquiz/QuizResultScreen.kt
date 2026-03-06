@@ -1,5 +1,10 @@
 package com.example.goquiz
 
+import android.content.Intent
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -24,6 +29,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,6 +63,30 @@ private val sampleReview = listOf(
         correctAnswer = "Mars"
     )
 )
+
+// ── Activity ──────────────────────────────────────────────────────────────────
+class QuizResultActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        val score = intent.getIntExtra("score", 0)
+        val total = intent.getIntExtra("total", 0)
+        val scorePercent = if (total > 0) (score * 100) / total else 0
+        setContent {
+            QuizResultScreen(
+                scorePercent = scorePercent,
+                correctCount = score,
+                incorrectCount = total - score,
+                onBack = { finish() },
+                onRetake = {
+                    startActivity(Intent(this, QuizTestActivity::class.java))
+                    finish()
+                },
+                onShare = { /* TODO: Share result */ }
+            )
+        }
+    }
+}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 @Composable
@@ -198,6 +228,26 @@ fun QuizResultScreen(
                     color = PrimaryOrange,
                     textAlign = TextAlign.Center
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // View Leaderboard button
+                val context = LocalContext.current
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(56.dp)
+                        .clickable {
+                            context.startActivity(Intent(context, LeaderBoardActivity::class.java))
+                        },
+                    shape = RoundedCornerShape(14.dp),
+                    color = PrimaryOrange
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("View Leaderboard", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    }
+                }
             }
 
             // ── Summary Stats ─────────────────────────────────────────────
@@ -311,6 +361,7 @@ fun QuizResultScreen(
                         }
                     }
                 }
+
             }
         }
     }

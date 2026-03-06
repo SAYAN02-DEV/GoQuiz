@@ -1,5 +1,9 @@
 package com.example.goquiz
 
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -29,6 +33,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+
+// ── Activity ──────────────────────────────────────────────────────────────────
+class UserProfileActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            UserProfileScreen(
+                onBack = { finish() },
+                onShare = { /* TODO: Share profile */ }
+            )
+        }
+    }
+}
 
 // ── Screen ────────────────────────────────────────────────────────────────────
 @Composable
@@ -166,7 +184,7 @@ fun UserProfileScreen(
                 Spacer(modifier = Modifier.height(14.dp))
 
                 Text(
-                    "Sarah Jen",
+                    "Sayan Manna",
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = TextDark,
