@@ -227,6 +227,23 @@ fun QuizResultScreen(
                     color = PrimaryOrange,
                     textAlign = TextAlign.Center
                 )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // View Leaderboard button
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                        .height(56.dp)
+                        .clickable { /* TODO: Navigate to Leaderboard */ },
+                    shape = RoundedCornerShape(14.dp),
+                    color = PrimaryOrange
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Text("View Leaderboard", color = Color.White, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                    }
+                }
             }
 
             // ── Summary Stats ─────────────────────────────────────────────
@@ -340,6 +357,7 @@ fun QuizResultScreen(
                         }
                     }
                 }
+
             }
         }
     }
