@@ -20,6 +20,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -148,7 +149,11 @@ fun StudentHomeScreen(
             Spacer(modifier = Modifier.height(28.dp))
 
             // ── Available Quizzes ────────────────────────────────────────
-            SectionHeader(title = "Available Quizzes", onSeeMore = { /* TODO */ })
+            val context = LocalContext.current
+            SectionHeader(title = "Available Quizzes", onSeeMore = {
+                val intent = Intent(context, QuizzesActivity::class.java)
+                context.startActivity(intent)
+            })
 
             Spacer(modifier = Modifier.height(12.dp))
 

@@ -229,13 +229,7 @@ fun QuizzesScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("Recommended for you", fontSize = 18.sp, fontWeight = FontWeight.Bold, color = TextDark)
-                Text(
-                    "View all",
-                    fontSize = 13.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    color = PrimaryOrange,
-                    modifier = Modifier.clickable { }
-                )
+
             }
 
             Spacer(modifier = Modifier.height(16.dp))
