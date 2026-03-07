@@ -66,6 +66,8 @@ model Question{
   text String
   image_link String @default("null")
   options Option[]
+  correct_points Int
+  negative_points Int
   student_answers Student_Answer[]
   question_type Int //1. SCQ 2.MCQ 3.Integer
 }
@@ -77,7 +79,7 @@ model Option{
   text String
   image_link String @default("null")
   is_correct Boolean @default(false)
-  student_answers Student_Answer[]
+  student_answers Student_Answer[]  
   mcq_selections Student_Answer_Option[]
 }
 
