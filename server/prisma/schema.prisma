@@ -1,0 +1,102 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Educator{
+  educator_id Int @id @default(autoincrement())
+  name String 
+  email String
+  phone String
+  classes Class[]
+}
+
+model Class{
+  class_id Int @id @default(autoincrement())
+  creater Educator @relation(fields: [creater_id], references: [educator_id])
+  creater_id Int
+  secret_key String
+  students Class_Admission[]
+  quizes Quiz[]
+}
+
+model Student{
+  student_id Int @id @default(autoincrement())
+  name String
+  email String
+  phone String
+  classes Class_Admission[]
+  quiz_attempts Quiz_Attempt[]
+}
+
+model Class_Admission{
+  admission_id Int @id @default(autoincrement())
+  student Student @relation(fields: [student_id], references:[student_id])
+  student_id Int
+  class Class @relation(fields: [class_id], references: [class_id])
+  class_id Int
+}
+
+model Quiz{
+  quiz_id Int @id @default(autoincrement())
+  class Class @relation(fields: [class_id], references: [class_id])
+  class_id Int
+  title String
+  is_live Boolean
+  due_date DateTime
+  is_result_out Boolean
+  questions Question[]
+  attempts Quiz_Attempt[]
+}
+
+model Question{
+  question_id Int @id @default(autoincrement())
+  quiz Quiz @relation(fields: [quiz_id], references: [quiz_id])
+  quiz_id Int
+  text String
+  image_link String @default("null")
+  options Option[]
+  student_answers Student_Answer[]
+}
+
+model Option{
+  option_id Int @id @default(autoincrement())
+  question Question @relation(fields: [question_id], references: [question_id])
+  question_id Int
+  text String
+  image_link String @default("null")
+  is_correct Boolean @default(false)
+  student_answers Student_Answer[]
+}
+
+model Quiz_Attempt{
+  attempt_id Int @id @default(autoincrement())
+  student Student @relation(fields: [student_id], references: [student_id])
+  student_id Int
+  quiz Quiz @relation(fields: [quiz_id], references: [quiz_id])
+  quiz_id Int
+  answers Student_Answer[]
+  points Int
+  is_Live Boolean @default(false)
+  attempt_date DateTime
+}
+
+model Student_Answer{
+  student_answer_id Int @id @default(autoincrement())
+  attempt Quiz_Attempt @relation(fields: [attempt_id], references: [attempt_id])
+  attempt_id Int
+  question Question @relation(fields: [question_id], references: [question_id])
+  question_id Int
+  selected_option Option @relation(fields: [option_id], references: [option_id])
+  option_id Int
+}
