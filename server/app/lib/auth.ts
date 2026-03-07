@@ -29,8 +29,34 @@ export async function getEducatorSession(){
     }
     const payload = JSON.parse(Buffer.from(bodyB64, "base64url").toString());
     if(payload.exp < Math.floor(Date.now() / 1000)) return null;
-    if(payload.exp<Math.floor(Date.now()/1000)){
-        return null;
-    }
     return payload as { educator_id: number, email: string};
+}
+
+export async function getStudentSession(){
+    const token = (await cookies()).get("student_session")?.value;
+    if(!token) return null;
+
+    const [headerB64, bodyB64, sigB64] = token.split(".");
+    if(!headerB64 || !bodyB64 || !sigB64) return null;
+
+    const secret = process.env.JWT_SECRET ?? "change-this-secret-in-production";
+    const key = await crypto.subtle.importKey(
+        "raw",
+        new TextEncoder().encode(secret),
+        { name: "HMAC", hash: "SHA-256" },
+        false,
+        ["verify"]
+    );
+
+    const valid = await crypto.subtle.verify(
+        "HMAC",
+        key,
+        Buffer.from(sigB64, "base64url"),
+        new TextEncoder().encode(`${headerB64}.${bodyB64}`)
+    );
+    if(!valid) return null;
+
+    const payload = JSON.parse(Buffer.from(bodyB64, "base64url").toString());
+    if(payload.exp < Math.floor(Date.now() / 1000)) return null;
+    return payload as { student_id: number, email: string};
 }
