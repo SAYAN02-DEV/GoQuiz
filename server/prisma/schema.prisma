@@ -24,6 +24,7 @@ model Educator{
 model Class{
   class_id Int @id @default(autoincrement())
   creater Educator @relation(fields: [creater_id], references: [educator_id])
+  name String
   creater_id Int
   secret_key String
   students Class_Admission[]

@@ -28,8 +28,9 @@ export async function getEducatorSession(){
         return null;
     }
     const payload = JSON.parse(Buffer.from(bodyB64, "base64url").toString());
+    if(payload.exp < Math.floor(Date.now() / 1000)) return null;
     if(payload.exp<Math.floor(Date.now()/1000)){
         return null;
     }
-    return payload as { educater_id: number, email: string};
+    return payload as { educator_id: number, email: string};
 }
