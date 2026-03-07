@@ -24,6 +24,7 @@ model Educator{
 model Class{
   class_id Int @id @default(autoincrement())
   creater Educator @relation(fields: [creater_id], references: [educator_id])
+  name String
   creater_id Int
   secret_key String
   students Class_Admission[]
@@ -66,7 +67,10 @@ model Question{
   text String
   image_link String @default("null")
   options Option[]
+  correct_points Int
+  negative_points Int
   student_answers Student_Answer[]
+  question_type Int //1. SCQ 2.MCQ 3.Integer
 }
 
 model Option{
@@ -76,7 +80,8 @@ model Option{
   text String
   image_link String @default("null")
   is_correct Boolean @default(false)
-  student_answers Student_Answer[]
+  student_answers Student_Answer[]  
+  mcq_selections Student_Answer_Option[]
 }
 
 model Quiz_Attempt{
@@ -97,6 +102,17 @@ model Student_Answer{
   attempt_id Int
   question Question @relation(fields: [question_id], references: [question_id])
   question_id Int
-  selected_option Option @relation(fields: [option_id], references: [option_id])
-  option_id Int
+  // SCQ: option_id is set. MCQ: option_id is null, use mcq_selected_options. Integer: option_id is null, use integer_answer.
+  selected_option Option? @relation(fields: [option_id], references: [option_id])
+  option_id Int?
+  mcq_selected_options Student_Answer_Option[]
+  integer_answer Int?
+}
+
+model Student_Answer_Option{
+  id                Int            @id @default(autoincrement())
+  student_answer    Student_Answer @relation(fields: [student_answer_id], references: [student_answer_id])
+  student_answer_id Int
+  option            Option         @relation(fields: [option_id], references: [option_id])
+  option_id         Int
 }
