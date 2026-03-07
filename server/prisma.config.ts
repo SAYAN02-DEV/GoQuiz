@@ -13,3 +13,4 @@ export default defineConfig({
     shadowDatabaseUrl: process.env["DIRECT_URL"],
   },
 });
+
