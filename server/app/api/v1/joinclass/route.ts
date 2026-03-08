@@ -26,10 +26,19 @@ export async function POST(request: NextRequest) {
     if(!classInfo){
         return NextResponse.json(
             {error: "class not found"},
-            {status: 401}
+            {status: 404}
         )
     }
-    else if(classInfo?.secret_key === secretKey){
+    const existing = await prisma.class_Admission.findFirst({
+        where: {student_id: session.student_id, class_id: classId}
+    });
+    if(existing){
+        return NextResponse.json(
+            {error: "Already joined this class"},
+            {status: 409}
+        )
+    }
+    else if(classInfo.secret_key === secretKey){
         const newAdmission = await prisma.class_Admission.create({
             data:{
                 student_id: session.student_id,
@@ -38,7 +47,12 @@ export async function POST(request: NextRequest) {
         });
         return NextResponse.json(
             {classAdmissionId: newAdmission.admission_id},
-            {status: 200}
+            {status: 201}
+        )
+    } else {
+        return NextResponse.json(
+            {error: "Invalid secret key"},
+            {status: 403}
         )
     }
 }
