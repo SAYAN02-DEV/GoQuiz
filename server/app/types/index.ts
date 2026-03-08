@@ -10,3 +10,8 @@ export interface CreateQuizRequest {
     dueDate: Date;
     isResultOut: boolean
 }
+
+export interface JoinClass{
+    classId: number
+    secretKey: String
+}
