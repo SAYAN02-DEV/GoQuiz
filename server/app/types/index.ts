@@ -19,3 +19,7 @@ export interface JoinClass{
 export interface PastQuiz{
     quizId: number
 }
+
+export interface PastTestSubmit{
+    attemptId: number
+}

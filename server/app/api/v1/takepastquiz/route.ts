@@ -42,7 +42,7 @@ export async function GET(request: NextRequest){
         {
             quiz: quiz,
             attempt_id: attempt.attempt_id,
-        }
+        },
         {status: 200}
     )
 }
