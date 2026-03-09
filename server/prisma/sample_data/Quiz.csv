@@ -1,0 +1,4 @@
+quiz_id,class_id,title,is_live,due_date,is_result_out
+1,1,Mid-term Algebra,false,2026-03-15 10:00:00,true
+2,1,Final Calculus,true,2026-04-20 14:00:00,false
+3,3,Physics Chapter 1,false,2026-03-10 09:00:00,true

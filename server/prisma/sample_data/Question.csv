@@ -1,0 +1,7 @@
+question_id,quiz_id,text,image_link,correct_points,negative_points,question_type
+1,1,What is 2 + 2?,null,4,0,3
+2,1,Which of the following is a prime number?,null,4,1,1
+3,1,Select all even numbers from the list,null,4,1,2
+4,3,Newton's first law is about?,null,4,1,1
+5,3,What is the speed of light in m/s (integer)?,null,4,0,3
+6,2,What is the derivative of x^2?,null,4,1,1
