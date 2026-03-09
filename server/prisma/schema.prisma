@@ -94,6 +94,7 @@ model Quiz_Attempt{
   points Int
   is_Live Boolean @default(false)
   attempt_date DateTime
+  is_complete Boolean
 }
 
 model Student_Answer{
