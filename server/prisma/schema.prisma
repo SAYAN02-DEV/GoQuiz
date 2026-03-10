@@ -55,7 +55,7 @@ model Quiz{
   title String
   is_live Boolean
   due_date DateTime
-  is_result_out Boolean
+  is_result_out Boolean @default(true)
   questions Question[]
   attempts Quiz_Attempt[]
 }

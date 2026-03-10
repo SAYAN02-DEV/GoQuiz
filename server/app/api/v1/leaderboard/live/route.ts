@@ -21,8 +21,14 @@ export async function GET(request: NextRequest) {
     const lbKey = RedisKeys.leaderboard(quizId);
     const namesKey = RedisKeys.studentNames(quizId);
 
-    // ZREVRANGE with scores: top 100 entries, highest score first
-    const raw = await redis.zrevrange(lbKey, 0, 99, "WITHSCORES");
+    let raw: string[];
+    try {
+        // ZREVRANGE with scores: top 100 entries, highest score first
+        raw = await redis.zrevrange(lbKey, 0, 99, "WITHSCORES");
+    } catch {
+        return NextResponse.json({ error: "Live leaderboard unavailable (Redis offline)" }, { status: 503 });
+    }
+
     if (!raw.length) {
         return NextResponse.json({ leaderboard: [] }, { status: 200 });
     }

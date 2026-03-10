@@ -37,17 +37,22 @@ export default function LeaderboardPage() {
                 const me = await meRes.json();
                 if (!me.error) setMyStudentId(me.student_id);
 
-                const liveRes = await fetch(`/api/v1/leaderboard/live?quiz_id=${quizId}`);
-                const liveData = await liveRes.json();
-                if (!liveData.error) {
-                    setEntries(liveData.leaderboard ?? []);
-                    setIsLive(true);
-                    setLoading(false);
-                    return;
-                }
-
+                // First fetch past leaderboard to check if quiz is live
                 const pastRes = await fetch(`/api/v1/leaderboard/past?quiz_id=${quizId}`);
                 const pastData = await pastRes.json();
+
+                if (pastData.is_live) {
+                    // Only hit Redis for actually live quizzes
+                    const liveRes = await fetch(`/api/v1/leaderboard/live?quiz_id=${quizId}`);
+                    const liveData = await liveRes.json();
+                    if (!liveData.error) {
+                        setEntries(liveData.leaderboard ?? []);
+                        setIsLive(true);
+                        setLoading(false);
+                        return;
+                    }
+                }
+
                 if (pastData.error) { setError(pastData.error); }
                 else { setEntries(pastData.leaderboard ?? []); }
             } catch {

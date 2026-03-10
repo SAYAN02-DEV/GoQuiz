@@ -106,7 +106,7 @@ export default function EducaterDashboardPage() {
         if (res.ok) {
             setNewQuizName(""); setNewQuizDue(""); setNewQuizLive(false);
             setShowCreateQuiz(false);
-            await load();
+            router.push(`/educater/quiz/${data.quiz_id}/questions`);
         } else {
             alert(data.error ?? "Failed to create quiz");
         }
@@ -224,6 +224,13 @@ export default function EducaterDashboardPage() {
                                                 </p>
                                             </div>
                                             <div className="flex items-center gap-2 shrink-0">
+                                                <button
+                                                    onClick={() => router.push(`/educater/quiz/${q.quiz_id}/questions`)}
+                                                    className="flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#f1f5f9] text-[#64748b] text-xs font-bold hover:bg-[#e2e8f0] transition cursor-pointer"
+                                                >
+                                                    <span className="material-symbols-outlined" style={{ fontSize: 14 }}>edit</span>
+                                                    Edit Questions
+                                                </button>
                                                 {q.is_live && (
                                                     <button
                                                         onClick={() => endLiveQuiz(q.quiz_id)}
