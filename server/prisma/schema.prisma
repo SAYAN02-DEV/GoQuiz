@@ -69,6 +69,7 @@ model Question{
   options Option[]
   correct_points Int
   negative_points Int
+  correct_integer_answer Int?
   student_answers Student_Answer[]
   question_type Int //1. SCQ 2.MCQ 3.Integer
 }
