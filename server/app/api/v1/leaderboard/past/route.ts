@@ -29,10 +29,6 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
     }
 
-    if (!quiz.is_result_out) {
-        return NextResponse.json({ error: "Results are not published yet" }, { status: 403 });
-    }
-
     const attempts = await prisma.quiz_Attempt.findMany({
         where: {
             quiz_id: quizId,
