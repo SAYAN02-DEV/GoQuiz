@@ -33,8 +33,10 @@ export async function GET(request: NextRequest) {
 
     const cached = await redis.get(metaKey);
     if (cached) {
+        console.log(`[takelivequiz] quiz ${quizId}: meta loaded from REDIS`);
         quizMeta = JSON.parse(cached) as QuizMeta;
     } else {
+        console.log(`[takelivequiz] quiz ${quizId}: Redis miss — loading from POSTGRES`);
         // Cache miss: load from Postgres and populate Redis
         const quiz = await prisma.quiz.findUnique({
             where: { quiz_id: quizId },
@@ -162,6 +164,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
         {
+            student_id: studentId,
             quiz: {
                 quiz_id: quizDisplay!.quiz_id,
                 title: quizDisplay!.title,

@@ -56,6 +56,7 @@ export async function POST(request: NextRequest) {
     const members = await redis.zrange(lbKey, 0, -1); // all student_ids
 
     let syncedCount = 0;
+    const attemptMap: { student_id: number; attempt_id: number }[] = [];
 
     for (const memberStr of members) {
         const studentId = parseInt(memberStr, 10);
@@ -76,6 +77,8 @@ export async function POST(request: NextRequest) {
                     is_complete: true,
                 },
             });
+
+            attemptMap.push({ student_id: studentId, attempt_id: attempt.attempt_id });
 
             // Write each answered question
             for (const [questionIdStr, answerJson] of Object.entries(answersRaw)) {
@@ -117,6 +120,12 @@ export async function POST(request: NextRequest) {
         where: { quiz_id },
         data: { is_live: false, is_result_out: true },
     });
+
+    // Notify connected students via WebSocket (through Redis pub/sub)
+    await redis.publish(
+        RedisKeys.quizEndedChannel(quiz_id),
+        JSON.stringify({ quiz_id, attempts: attemptMap })
+    );
 
     // Clean up Redis keys for this quiz
     const keysToDelete = [

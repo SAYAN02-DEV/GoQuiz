@@ -41,6 +41,10 @@ export const RedisKeys = {
 
     /** Pub/sub channel for broadcasting leaderboard snapshots */
     leaderboardChannel: (quizId: number) => `live:quiz:${quizId}:updates`,
+
+    /** Pub/sub channel published when educator ends the quiz.
+     *  Payload: JSON array of { student_id, attempt_id } */
+    quizEndedChannel: (quizId: number) => `live:quiz:${quizId}:ended`,
 } as const;
 
 // ─── shared types stored in Redis ─────────────────────────────────────────────

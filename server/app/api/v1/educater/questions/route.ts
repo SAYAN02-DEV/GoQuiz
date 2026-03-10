@@ -161,7 +161,8 @@ export async function POST(request: NextRequest) {
                 },
                 include: { options: true },
             })
-        )
+        ),
+        { timeout: 30000 }
     );
 
     return NextResponse.json(

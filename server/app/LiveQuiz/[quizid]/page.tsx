@@ -39,9 +39,11 @@ export default function LiveQuizPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [myPoints, setMyPoints] = useState(0);
+    const [myStudentId, setMyStudentId] = useState<number | null>(null);
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [showBoard, setShowBoard] = useState(false);
     const socketRef = useRef<Socket | null>(null);
+    const submittedRef = useRef<Set<number>>(new Set());
 
     useEffect(() => {
         fetch(`/api/v1/takelivequiz?quiz_id=${quizId}`)
@@ -53,12 +55,19 @@ export default function LiveQuizPage() {
                 if (!data) return;
                 if (data.error) { setError(data.error); return; }
                 setQuiz(data.quiz);
+                if (data.student_id) setMyStudentId(data.student_id);
             })
             .finally(() => setLoading(false));
     }, [quizId, router]);
 
     useEffect(() => {
-        const socket: Socket = io(process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:8001");
+        // Fetch initial leaderboard snapshot over HTTP so it shows before first answer
+        fetch(`/api/v1/leaderboard/live?quiz_id=${quizId}`)
+            .then((r) => r.ok ? r.json() : null)
+            .then((data) => { if (data?.leaderboard?.length) setLeaderboard(data.leaderboard); })
+            .catch(() => {});
+
+        const socket: Socket = io(process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:8002");
         socketRef.current = socket;
         socket.emit("join_quiz", { quiz_id: quizId });
         socket.on("leaderboard_update", (data: { leaderboard: LeaderboardEntry[] }) => {
@@ -78,17 +87,22 @@ export default function LiveQuizPage() {
     const currentAnswer = answers[question.question_id];
 
     async function submitAnswer(ans: Answers[number]) {
-        if (currentAnswer?.submitted) return;
+        if (submittedRef.current.has(question.question_id)) return;
+        submittedRef.current.add(question.question_id);
         setAnswers((prev) => ({ ...prev, [question.question_id]: { ...ans, submitted: true } }));
+        console.log(`[LiveQuiz] Submitting answer for question ${question.question_id}`, ans);
         const res = await fetch("/api/v1/submitliveanswer", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ quiz_id: quizId, question_id: question.question_id, ...ans }),
         });
         const data = await res.json();
+        console.log(`[LiveQuiz] submitliveanswer response: status=${res.status}`, data);
         if (res.ok) {
             setMyPoints((p) => p + (data.points_earned ?? 0));
             setAnswers((prev) => ({ ...prev, [question.question_id]: { ...ans, submitted: true, points_earned: data.points_earned } }));
+        } else {
+            console.error(`[LiveQuiz] Submit failed: ${data.error}`);
         }
     }
 
@@ -139,20 +153,66 @@ export default function LiveQuizPage() {
                     {/* Live leaderboard panel */}
                     {showBoard && (
                         <div className="mx-4 mb-4 rounded-2xl border border-[#f1ede8] overflow-hidden">
-                            <div className="bg-[#fff4e8] px-4 py-2 flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse inline-block" />
-                                <span className="text-xs font-bold text-[#0f172a]">Live Leaderboard</span>
+                            {/* Header */}
+                            <div className="bg-gradient-to-r from-[#f27f0d] to-[#f5a623] px-4 py-3 flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <span className="w-2 h-2 rounded-full bg-white animate-pulse inline-block" />
+                                    <span className="text-xs font-black text-white tracking-wider uppercase">Live Leaderboard</span>
+                                </div>
+                                <span className="text-[10px] font-bold text-white/80">{leaderboard.length} participant{leaderboard.length !== 1 ? "s" : ""}</span>
                             </div>
                             {leaderboard.length === 0 ? (
-                                <p className="text-xs text-[#94a3b8] px-4 py-3">No data yet.</p>
+                                <div className="px-4 py-6 flex flex-col items-center gap-1">
+                                    <span className="material-symbols-outlined text-[#f1ede8] text-4xl">leaderboard</span>
+                                    <p className="text-xs text-[#94a3b8] font-medium">Waiting for answers…</p>
+                                </div>
                             ) : (
-                                leaderboard.slice(0, 5).map((e) => (
-                                    <div key={e.student_id} className="flex items-center justify-between px-4 py-2 border-t border-[#f1ede8]">
-                                        <span className="text-xs font-bold text-[#94a3b8] w-5">#{e.rank}</span>
-                                        <span className="flex-1 text-xs font-semibold text-[#0f172a] ml-2">{e.name}</span>
-                                        <span className="text-xs font-black text-[#f27f0d]">{e.points} pts</span>
-                                    </div>
-                                ))
+                                <div className="divide-y divide-[#f1ede8]">
+                                    {leaderboard.slice(0, 10).map((e) => {
+                                        const isMe = e.student_id === myStudentId;
+                                        const medal = e.rank === 1 ? "🥇" : e.rank === 2 ? "🥈" : e.rank === 3 ? "🥉" : null;
+                                        return (
+                                            <div key={e.student_id} className={`flex items-center gap-3 px-4 py-2.5 transition-colors ${isMe ? "bg-[#fff4e8]" : "bg-white hover:bg-[#fafaf9]"}`}>
+                                                {/* Rank */}
+                                                <div className="w-7 shrink-0 text-center">
+                                                    {medal ? (
+                                                        <span className="text-base leading-none">{medal}</span>
+                                                    ) : (
+                                                        <span className="text-xs font-black text-[#94a3b8]">#{e.rank}</span>
+                                                    )}
+                                                </div>
+                                                {/* Name */}
+                                                <span className={`flex-1 text-xs font-semibold truncate ${isMe ? "text-[#f27f0d]" : "text-[#0f172a]"}`}>
+                                                    {e.name}{isMe && <span className="ml-1 text-[10px] font-bold text-[#f27f0d] opacity-70">(you)</span>}
+                                                </span>
+                                                {/* Points bar */}
+                                                <div className="flex items-center gap-2 shrink-0">
+                                                    <div className="w-16 h-1.5 rounded-full bg-[#f1ede8] overflow-hidden">
+                                                        <div
+                                                            className="h-full rounded-full bg-[#f27f0d] transition-all duration-500"
+                                                            style={{ width: `${leaderboard[0].points > 0 ? Math.round((e.points / leaderboard[0].points) * 100) : 0}%` }}
+                                                        />
+                                                    </div>
+                                                    <span className={`text-xs font-black w-12 text-right ${isMe ? "text-[#f27f0d]" : "text-[#0f172a]"}`}>{e.points} pts</span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                    {/* If I'm not in top 10, show my row at the bottom */}
+                                    {myStudentId !== null && !leaderboard.slice(0, 10).some(e => e.student_id === myStudentId) && (() => {
+                                        const me = leaderboard.find(e => e.student_id === myStudentId);
+                                        if (!me) return null;
+                                        return (
+                                            <div className="flex items-center gap-3 px-4 py-2.5 bg-[#fff4e8] border-t-2 border-[#f27f0d]">
+                                                <div className="w-7 shrink-0 text-center">
+                                                    <span className="text-xs font-black text-[#f27f0d]">#{me.rank}</span>
+                                                </div>
+                                                <span className="flex-1 text-xs font-semibold truncate text-[#f27f0d]">{me.name} <span className="text-[10px] opacity-70">(you)</span></span>
+                                                <span className="text-xs font-black text-[#f27f0d]">{me.points} pts</span>
+                                            </div>
+                                        );
+                                    })()}
+                                </div>
                             )}
                         </div>
                     )}
@@ -252,13 +312,21 @@ export default function LiveQuizPage() {
                         >
                             â† Previous
                         </button>
-                        <button
-                            onClick={() => setCurrentIndex((i) => i + 1)}
-                            disabled={currentIndex === total - 1}
-                            className="flex items-center gap-2 h-11 px-6 rounded-xl bg-[#f27f0d] text-white text-sm font-bold hover:bg-[#e0720a] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                            Next Question â†’
-                        </button>
+                        {currentIndex < total - 1 ? (
+                            <button
+                                onClick={() => setCurrentIndex((i) => i + 1)}
+                                className="flex items-center gap-2 h-11 px-6 rounded-xl bg-[#f27f0d] text-white text-sm font-bold hover:bg-[#e0720a] transition-colors cursor-pointer"
+                            >
+                                Next Question
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => router.push(`/LiveQuizComplete/${quizId}`)}
+                                className="flex items-center gap-2 h-11 px-6 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition-colors cursor-pointer"
+                            >
+                                Finish Quiz
+                            </button>
+                        )}
                     </div>
 
                 </div>

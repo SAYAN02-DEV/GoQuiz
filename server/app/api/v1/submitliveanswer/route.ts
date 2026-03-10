@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@/app/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { getStudentSession } from "@/app/lib/auth";
-import { redis, RedisKeys, QuizMeta, AnswerQueueItem } from "@/app/lib/redis";
+import { redis, RedisKeys, QuizMeta } from "@/app/lib/redis";
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
+
+const QUIZ_META_TTL_SECONDS = 6 * 60 * 60;
 
 export async function POST(request: NextRequest) {
     const session = await getStudentSession();
@@ -27,17 +34,47 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "quiz_id and question_id are required" }, { status: 400 });
     }
 
-    // ── 1. Load quiz meta from Redis ──────────────────────────────────────────
-    // The student must have called GET /takelivequiz first; if the key is missing
-    // the quiz is not live or the TTL expired.
-    const metaRaw = await redis.get(RedisKeys.quizMeta(quiz_id));
-    if (!metaRaw) {
-        return NextResponse.json(
-            { error: "Live session not found. Call GET /takelivequiz first." },
-            { status: 404 }
-        );
+    // ── 1. Load quiz meta (Redis-first, Postgres fallback) ───────────────────
+    const metaKey = RedisKeys.quizMeta(quiz_id);
+    let quizMeta: QuizMeta;
+
+    const metaRaw = await redis.get(metaKey);
+    if (metaRaw) {
+        console.log(`[submitliveanswer] quiz ${quiz_id}: meta loaded from REDIS`);
+        quizMeta = JSON.parse(metaRaw) as QuizMeta;
+    } else {
+        console.log(`[submitliveanswer] quiz ${quiz_id}: Redis miss — loading from POSTGRES`);
+        // Cache miss — repopulate from Postgres
+        const quiz = await prisma.quiz.findUnique({
+            where: { quiz_id },
+            include: { questions: { include: { options: true } } },
+        });
+        if (!quiz) {
+            return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+        }
+        if (!quiz.is_live) {
+            return NextResponse.json(
+                { error: "This quiz is not live." },
+                { status: 400 }
+            );
+        }
+        quizMeta = {
+            quiz_id: quiz.quiz_id,
+            title: quiz.title,
+            questions: quiz.questions.map((q) => ({
+                question_id: q.question_id,
+                question_type: q.question_type,
+                correct_points: q.correct_points,
+                negative_points: q.negative_points,
+                correct_integer_answer: q.correct_integer_answer ?? null,
+                options: q.options.map((o) => ({
+                    option_id: o.option_id,
+                    is_correct: o.is_correct,
+                })),
+            })),
+        };
+        await redis.set(metaKey, JSON.stringify(quizMeta), "EX", QUIZ_META_TTL_SECONDS);
     }
-    const quizMeta = JSON.parse(metaRaw) as QuizMeta;
 
     const question = quizMeta.questions.find((q) => q.question_id === question_id);
     if (!question) {
@@ -108,7 +145,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Unknown question type" }, { status: 400 });
     }
 
-    // ── 4. Persist answer + update running points in Redis ────────────────────
+    // ── 4. Persist answer + update individual points in Redis ─────────────────
     const answerPayload = JSON.stringify({
         question_type: question.question_type,
         option_id: option_id ?? null,
@@ -120,7 +157,6 @@ export async function POST(request: NextRequest) {
     const TTL = await redis.ttl(RedisKeys.quizMeta(quiz_id));
     const safeTTL = TTL > 0 ? TTL : 6 * 60 * 60;
 
-    // HSET answer, INCRBY points — done atomically via a pipeline
     await redis
         .pipeline()
         .hset(answersKey, String(question_id), answerPayload)
@@ -129,24 +165,14 @@ export async function POST(request: NextRequest) {
         .expire(RedisKeys.attemptPoints(quiz_id, studentId), safeTTL)
         .exec();
 
-    // ── 5. Push job onto the answer queue for the worker ─────────────────────
-    const job: AnswerQueueItem = {
-        quiz_id,
-        student_id: studentId,
-        question_id,
-        question_type: question.question_type,
-        option_id: option_id ?? null,
-        selected_option_ids: selected_option_ids ?? [],
-        integer_answer: integer_answer ?? null,
-        points_earned: pointsEarned,
-    };
-    await redis.rpush(RedisKeys.answerQueue(), JSON.stringify(job));
+    // ── 5. Push job to queue — worker will update leaderboard & broadcast ─────
+    await redis.rpush(
+        RedisKeys.answerQueue(),
+        JSON.stringify({ quiz_id, student_id: studentId, points_earned: pointsEarned })
+    );
 
     return NextResponse.json(
-        {
-            success: true,
-            points_earned: pointsEarned,
-        },
+        { success: true, points_earned: pointsEarned },
         { status: 200 }
     );
 }
