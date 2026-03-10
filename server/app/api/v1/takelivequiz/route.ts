@@ -164,6 +164,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
         {
+            student_id: studentId,
             quiz: {
                 quiz_id: quizDisplay!.quiz_id,
                 title: quizDisplay!.title,

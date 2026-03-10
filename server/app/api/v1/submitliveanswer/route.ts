@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { PrismaClient } from "@/app/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { getStudentSession } from "@/app/lib/auth";
-import { redis, RedisKeys, QuizMeta, AnswerQueueItem } from "@/app/lib/redis";
+import { redis, RedisKeys, QuizMeta } from "@/app/lib/redis";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
 const prisma = new PrismaClient({ adapter });
@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "Unknown question type" }, { status: 400 });
     }
 
-    // ── 4. Persist answer + update running points in Redis ────────────────────
+    // ── 4. Persist answer + update individual points in Redis ─────────────────
     const answerPayload = JSON.stringify({
         question_type: question.question_type,
         option_id: option_id ?? null,
@@ -157,7 +157,6 @@ export async function POST(request: NextRequest) {
     const TTL = await redis.ttl(RedisKeys.quizMeta(quiz_id));
     const safeTTL = TTL > 0 ? TTL : 6 * 60 * 60;
 
-    // HSET answer, INCRBY points — done atomically via a pipeline
     await redis
         .pipeline()
         .hset(answersKey, String(question_id), answerPayload)
@@ -166,24 +165,14 @@ export async function POST(request: NextRequest) {
         .expire(RedisKeys.attemptPoints(quiz_id, studentId), safeTTL)
         .exec();
 
-    // ── 5. Push job onto the answer queue for the worker ─────────────────────
-    const job: AnswerQueueItem = {
-        quiz_id,
-        student_id: studentId,
-        question_id,
-        question_type: question.question_type,
-        option_id: option_id ?? null,
-        selected_option_ids: selected_option_ids ?? [],
-        integer_answer: integer_answer ?? null,
-        points_earned: pointsEarned,
-    };
-    await redis.rpush(RedisKeys.answerQueue(), JSON.stringify(job));
+    // ── 5. Push job to queue — worker will update leaderboard & broadcast ─────
+    await redis.rpush(
+        RedisKeys.answerQueue(),
+        JSON.stringify({ quiz_id, student_id: studentId, points_earned: pointsEarned })
+    );
 
     return NextResponse.json(
-        {
-            success: true,
-            points_earned: pointsEarned,
-        },
+        { success: true, points_earned: pointsEarned },
         { status: 200 }
     );
 }

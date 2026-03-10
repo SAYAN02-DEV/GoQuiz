@@ -33,7 +33,6 @@ export async function GET(request: NextRequest) {
         where: {
             quiz_id: quizId,
             is_complete: true,
-            is_Live: false,
         },
         orderBy: {
             points: "desc",
