@@ -44,3 +44,14 @@ export interface CreateQuestionsRequest {
     quiz_id: number;
     questions: QuestionInput[];
 }
+
+export interface SubmitAnswerRequest {
+    attempt_id: number;
+    question_id: number;
+    // SCQ: provide option_id
+    option_id?: number;
+    // MCQ: provide selected_option_ids
+    selected_option_ids?: number[];
+    // Integer: provide integer_answer
+    integer_answer?: number;
+}
