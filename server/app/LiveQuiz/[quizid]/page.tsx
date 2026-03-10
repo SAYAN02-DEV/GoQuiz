@@ -267,7 +267,7 @@ export default function LiveQuizPage() {
                             </button>
                         ) : (
                             <button
-                                onClick={() => router.push(`/QuizResult?quiz_id=${quizId}&is_live=true`)}
+                                onClick={() => router.push(`/LiveQuizComplete/${quizId}`)}
                                 className="flex items-center gap-2 h-11 px-6 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition-colors cursor-pointer"
                             >
                                 Finish Quiz

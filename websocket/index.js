@@ -21,6 +21,7 @@ const io = new Server(server, {
 const leaderboardKey = (quizId) => `live:quiz:${quizId}:leaderboard`;
 const studentNamesKey = (quizId) => `live:quiz:${quizId}:students`;
 const channelKey = (quizId) => `live:quiz:${quizId}:updates`;
+const quizEndedChannelKey = (quizId) => `live:quiz:${quizId}:ended`;
 
 // ── socket.io: clients join a room per quiz ───────────────────────────────────
 io.on("connection", (socket) => {
@@ -31,6 +32,8 @@ io.on("connection", (socket) => {
         if (!quiz_id) return;
         socket.join(`quiz:${quiz_id}`);
         console.log(`${socket.id} joined quiz:${quiz_id}`);
+        // Subscribe to the quiz_ended channel for this quiz (idempotent)
+        redisSub.subscribe(quizEndedChannelKey(quiz_id));
     });
 
     socket.on("leave_quiz", ({ quiz_id }) => {
@@ -44,15 +47,28 @@ io.on("connection", (socket) => {
 
 // ── pub/sub subscriber: broadcast incoming snapshots to the correct room ──────
 redisSub.on("message", (channel, message) => {
-    // channel format: live:quiz:{quiz_id}:updates
-    const parts = channel.split(":");
-    const quizId = parts[2];
-    if (!quizId) return;
-    try {
-        const data = JSON.parse(message);
-        io.to(`quiz:${quizId}`).emit("leaderboard_update", data);
-    } catch {
-        // malformed message — ignore
+    // Leaderboard update: channel format live:quiz:{quiz_id}:updates
+    const leaderboardMatch = channel.match(/^live:quiz:(\d+):updates$/);
+    if (leaderboardMatch) {
+        const quizId = leaderboardMatch[1];
+        try {
+            const data = JSON.parse(message);
+            io.to(`quiz:${quizId}`).emit("leaderboard_update", data);
+        } catch { /* malformed — ignore */ }
+        return;
+    }
+
+    // Quiz ended: channel format live:quiz:{quiz_id}:ended
+    // Payload: { quiz_id, attempts: [{ student_id, attempt_id }] }
+    const endedMatch = channel.match(/^live:quiz:(\d+):ended$/);
+    if (endedMatch) {
+        const quizId = endedMatch[1];
+        try {
+            const data = JSON.parse(message);
+            // Emit to the whole room — each client filters by their own student_id
+            io.to(`quiz:${quizId}`).emit("quiz_ended", data);
+            console.log(`quiz_ended emitted to room quiz:${quizId}`);
+        } catch { /* malformed — ignore */ }
     }
 });
 
