@@ -1,6 +1,6 @@
 ﻿"use client";
 import { useState, useEffect, Suspense } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 const Q_TYPE: Record<number, string> = { 1: "SCQ", 2: "MCQ", 3: "Integer" };
 
@@ -80,6 +80,7 @@ function CircleProgress({ percent }: { percent: number }) {
 
 function QuizResultContent() {
     const searchParams = useSearchParams();
+    const router = useRouter();
     const attemptId = searchParams.get("attempt_id");
 
     const [attempt, setAttempt] = useState<Attempt | null>(null);
@@ -144,6 +145,13 @@ function QuizResultContent() {
                         </p>
                     </div>
                     <div className="flex gap-3">
+                        <button
+                            onClick={() => router.push(`/Leaderboard/${attempt.quiz.quiz_id}`)}
+                            className="flex items-center gap-2 h-10 px-4 rounded-xl bg-[#f27f0d] text-white text-sm font-bold hover:bg-[#e0720a] transition cursor-pointer"
+                        >
+                            <span className="material-symbols-outlined" style={{ fontSize: 16 }}>leaderboard</span>
+                            View Leaderboard
+                        </button>
                         <button className="flex items-center gap-2 h-10 px-4 rounded-xl border border-[#e2e8f0] bg-white text-sm font-bold text-[#0f172a] hover:shadow-sm transition cursor-pointer">
                             <span className="material-symbols-outlined" style={{ fontSize: 16 }}>share</span>
                             Share Results
