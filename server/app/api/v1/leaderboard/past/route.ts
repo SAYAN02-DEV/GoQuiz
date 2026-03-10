@@ -60,5 +60,5 @@ export async function GET(request: NextRequest) {
         attempt_date: attempt.attempt_date,
     }));
 
-    return NextResponse.json({ quiz_id: quizId, leaderboard }, { status: 200 });
+    return NextResponse.json({ quiz_id: quizId, is_live: quiz.is_live, leaderboard }, { status: 200 });
 }
