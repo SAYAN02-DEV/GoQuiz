@@ -33,25 +33,21 @@ export async function GET(request: NextRequest) {
     }
 
     const quizzes = await prisma.quiz.findMany({
-        where: { class_id: classId, is_live: false },
+        where: { class_id: classId },
         select: {
             quiz_id: true,
             title: true,
             due_date: true,
+            is_live: true,
             is_result_out: true,
             _count: { select: { questions: true } },
         },
         orderBy: { due_date: "desc" },
     });
 
-    // Include the student's attempt status for each quiz
     const studentAttempts = await prisma.quiz_Attempt.findMany({
-        where: {
-            student_id: session.student_id,
-            quiz: { class_id: classId },
-            is_Live: false,
-        },
-        select: { quiz_id: true, attempt_id: true, is_complete: true, points: true },
+        where: { student_id: session.student_id, quiz: { class_id: classId } },
+        select: { quiz_id: true, attempt_id: true, is_complete: true, points: true, is_Live: true },
     });
 
     const attemptMap = new Map(studentAttempts.map((a) => [a.quiz_id, a]));
@@ -60,6 +56,7 @@ export async function GET(request: NextRequest) {
         quiz_id: q.quiz_id,
         title: q.title,
         due_date: q.due_date,
+        is_live: q.is_live,
         is_result_out: q.is_result_out,
         question_count: q._count.questions,
         attempt: attemptMap.get(q.quiz_id) ?? null,
