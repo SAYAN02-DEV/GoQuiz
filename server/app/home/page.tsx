@@ -1,3 +1,5 @@
+"use client";
+import { useRouter } from "next/navigation";
 import Header from "@/app/components/Header";
 import Footer from "@/app/components/Footer";
 
@@ -14,6 +16,7 @@ const FEATURES = [
 ];
 
 export default function QuizAILanding() {
+  const router = useRouter();
   return (
     <div className="quiz-root">
 
@@ -37,8 +40,8 @@ export default function QuizAILanding() {
                 Experience the next evolution of education. Create custom challenges, track your growth, and conquer your academic goals with personalized AI study paths.
               </p>
               <div className="hero-btns">
-                <button className="btn-hero-primary">Start Quiz Now</button>
-                <button className="btn-hero-outline">View Demo</button>
+                <button className="btn-hero-primary" onClick={() => router.push("/select-role")}>Start Quiz Now</button>
+                <button className="btn-hero-outline" onClick={() => router.push("/select-role")}>Login</button>
               </div>
               <div className="hero-social-proof">
                 <div className="avatars">
@@ -107,8 +110,8 @@ export default function QuizAILanding() {
                   Join over 10,000 students and professionals who are transforming the way they study. Get started for free today.
                 </p>
                 <div className="cta-btns">
-                  <button className="btn-cta-primary">Create Free Account</button>
-                  <button className="btn-cta-outline">Contact Sales</button>
+                <button className="btn-cta-primary" onClick={() => router.push("/select-role")}>Create Free Account</button>
+                <button className="btn-cta-outline" onClick={() => router.push("/select-role")}>Login</button>
                 </div>
               </div>
             </div>

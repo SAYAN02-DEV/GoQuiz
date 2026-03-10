@@ -1,6 +1,8 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
 
 export default function Home() {
+  redirect("/home");
+}
   return (
     <div className="min-h-screen bg-[#f5f3ef] flex flex-col">
       {/* Navbar */}
