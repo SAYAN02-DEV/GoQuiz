@@ -67,7 +67,7 @@ export default function LeaderboardPage() {
     // socket.io for live updates
     useEffect(() => {
         if (!isLive) return;
-        const wsUrl = process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:8001";
+        const wsUrl = process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:8002";
         const socket = io(wsUrl, { transports: ["websocket"] });
         socketRef.current = socket;
         socket.emit("join_quiz", { quiz_id: quizId });

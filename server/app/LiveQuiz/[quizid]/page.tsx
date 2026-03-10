@@ -42,6 +42,7 @@ export default function LiveQuizPage() {
     const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
     const [showBoard, setShowBoard] = useState(false);
     const socketRef = useRef<Socket | null>(null);
+    const submittedRef = useRef<Set<number>>(new Set());
 
     useEffect(() => {
         fetch(`/api/v1/takelivequiz?quiz_id=${quizId}`)
@@ -58,7 +59,7 @@ export default function LiveQuizPage() {
     }, [quizId, router]);
 
     useEffect(() => {
-        const socket: Socket = io(process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:8001");
+        const socket: Socket = io(process.env.NEXT_PUBLIC_WS_URL ?? "http://localhost:8002");
         socketRef.current = socket;
         socket.emit("join_quiz", { quiz_id: quizId });
         socket.on("leaderboard_update", (data: { leaderboard: LeaderboardEntry[] }) => {
@@ -78,17 +79,22 @@ export default function LiveQuizPage() {
     const currentAnswer = answers[question.question_id];
 
     async function submitAnswer(ans: Answers[number]) {
-        if (currentAnswer?.submitted) return;
+        if (submittedRef.current.has(question.question_id)) return;
+        submittedRef.current.add(question.question_id);
         setAnswers((prev) => ({ ...prev, [question.question_id]: { ...ans, submitted: true } }));
+        console.log(`[LiveQuiz] Submitting answer for question ${question.question_id}`, ans);
         const res = await fetch("/api/v1/submitliveanswer", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ quiz_id: quizId, question_id: question.question_id, ...ans }),
         });
         const data = await res.json();
+        console.log(`[LiveQuiz] submitliveanswer response: status=${res.status}`, data);
         if (res.ok) {
             setMyPoints((p) => p + (data.points_earned ?? 0));
             setAnswers((prev) => ({ ...prev, [question.question_id]: { ...ans, submitted: true, points_earned: data.points_earned } }));
+        } else {
+            console.error(`[LiveQuiz] Submit failed: ${data.error}`);
         }
     }
 
@@ -252,13 +258,21 @@ export default function LiveQuizPage() {
                         >
                             â† Previous
                         </button>
-                        <button
-                            onClick={() => setCurrentIndex((i) => i + 1)}
-                            disabled={currentIndex === total - 1}
-                            className="flex items-center gap-2 h-11 px-6 rounded-xl bg-[#f27f0d] text-white text-sm font-bold hover:bg-[#e0720a] transition-colors cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
-                            Next Question â†’
-                        </button>
+                        {currentIndex < total - 1 ? (
+                            <button
+                                onClick={() => setCurrentIndex((i) => i + 1)}
+                                className="flex items-center gap-2 h-11 px-6 rounded-xl bg-[#f27f0d] text-white text-sm font-bold hover:bg-[#e0720a] transition-colors cursor-pointer"
+                            >
+                                Next Question
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => router.push(`/QuizResult?quiz_id=${quizId}&is_live=true`)}
+                                className="flex items-center gap-2 h-11 px-6 rounded-xl bg-green-500 text-white text-sm font-bold hover:bg-green-600 transition-colors cursor-pointer"
+                            >
+                                Finish Quiz
+                            </button>
+                        )}
                     </div>
 
                 </div>

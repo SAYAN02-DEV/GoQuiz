@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { PrismaClient } from "@/app/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { getStudentSession } from "@/app/lib/auth";
 import { redis, RedisKeys, QuizMeta, AnswerQueueItem } from "@/app/lib/redis";
+
+const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL! });
+const prisma = new PrismaClient({ adapter });
+
+const QUIZ_META_TTL_SECONDS = 6 * 60 * 60;
 
 export async function POST(request: NextRequest) {
     const session = await getStudentSession();
@@ -27,17 +34,47 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "quiz_id and question_id are required" }, { status: 400 });
     }
 
-    // ── 1. Load quiz meta from Redis ──────────────────────────────────────────
-    // The student must have called GET /takelivequiz first; if the key is missing
-    // the quiz is not live or the TTL expired.
-    const metaRaw = await redis.get(RedisKeys.quizMeta(quiz_id));
-    if (!metaRaw) {
-        return NextResponse.json(
-            { error: "Live session not found. Call GET /takelivequiz first." },
-            { status: 404 }
-        );
+    // ── 1. Load quiz meta (Redis-first, Postgres fallback) ───────────────────
+    const metaKey = RedisKeys.quizMeta(quiz_id);
+    let quizMeta: QuizMeta;
+
+    const metaRaw = await redis.get(metaKey);
+    if (metaRaw) {
+        console.log(`[submitliveanswer] quiz ${quiz_id}: meta loaded from REDIS`);
+        quizMeta = JSON.parse(metaRaw) as QuizMeta;
+    } else {
+        console.log(`[submitliveanswer] quiz ${quiz_id}: Redis miss — loading from POSTGRES`);
+        // Cache miss — repopulate from Postgres
+        const quiz = await prisma.quiz.findUnique({
+            where: { quiz_id },
+            include: { questions: { include: { options: true } } },
+        });
+        if (!quiz) {
+            return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+        }
+        if (!quiz.is_live) {
+            return NextResponse.json(
+                { error: "This quiz is not live." },
+                { status: 400 }
+            );
+        }
+        quizMeta = {
+            quiz_id: quiz.quiz_id,
+            title: quiz.title,
+            questions: quiz.questions.map((q) => ({
+                question_id: q.question_id,
+                question_type: q.question_type,
+                correct_points: q.correct_points,
+                negative_points: q.negative_points,
+                correct_integer_answer: q.correct_integer_answer ?? null,
+                options: q.options.map((o) => ({
+                    option_id: o.option_id,
+                    is_correct: o.is_correct,
+                })),
+            })),
+        };
+        await redis.set(metaKey, JSON.stringify(quizMeta), "EX", QUIZ_META_TTL_SECONDS);
     }
-    const quizMeta = JSON.parse(metaRaw) as QuizMeta;
 
     const question = quizMeta.questions.find((q) => q.question_id === question_id);
     if (!question) {

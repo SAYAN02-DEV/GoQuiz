@@ -8,7 +8,7 @@ export default function ChatPage() {
   const socketRef = useRef<Socket | null>(null)
 
   useEffect(() => {
-    const socket = io('http://localhost:8001')
+    const socket = io('http://localhost:8002')
     socketRef.current = socket
 
     socket.on('connect', () => {

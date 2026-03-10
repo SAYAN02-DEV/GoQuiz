@@ -106,4 +106,4 @@ async function runWorker() {
 }
 
 runWorker();
-server.listen(8001, () => console.log("WebSocket server on port 8001"));
+server.listen(8002, () => console.log("WebSocket server on port 8002"));
