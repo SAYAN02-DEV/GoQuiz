@@ -141,27 +141,32 @@ export async function POST(request: NextRequest) {
     }
 
     const createdQuestions = await prisma.$transaction(
-        questions.map((q) =>
-            prisma.question.create({
-                data: {
-                    quiz_id,
-                    text: q.text,
-                    image_link: q.image_link ?? "null",
-                    question_type: q.question_type,
-                    correct_points: q.correct_points,
-                    negative_points: q.negative_points,
-                    correct_integer_answer: q.correct_integer_answer ?? null,
-                    options: {
-                        create: (q.options ?? []).map((opt) => ({
-                            text: opt.text,
-                            image_link: opt.image_link ?? "null",
-                            is_correct: opt.is_correct,
-                        })),
+        async (tx) => {
+            const results = [];
+            for (const q of questions) {
+                const created = await tx.question.create({
+                    data: {
+                        quiz_id,
+                        text: q.text,
+                        image_link: q.image_link ?? "null",
+                        question_type: q.question_type,
+                        correct_points: q.correct_points,
+                        negative_points: q.negative_points,
+                        correct_integer_answer: q.correct_integer_answer ?? null,
+                        options: {
+                            create: (q.options ?? []).map((opt) => ({
+                                text: opt.text,
+                                image_link: opt.image_link ?? "null",
+                                is_correct: opt.is_correct,
+                            })),
+                        },
                     },
-                },
-                include: { options: true },
-            })
-        ),
+                    include: { options: true },
+                });
+                results.push(created);
+            }
+            return results;
+        },
         { timeout: 30000 }
     );
 
