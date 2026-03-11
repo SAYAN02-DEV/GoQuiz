@@ -106,7 +106,10 @@ export default function LiveQuizPage() {
         }
     }
 
-    function selectSCQ(option_id: number) { submitAnswer({ option_id }); }
+    function selectSCQ(option_id: number) {
+        if (currentAnswer?.submitted) return;
+        setAnswers((a) => ({ ...a, [question.question_id]: { option_id } }));
+    }
     function toggleMCQ(option_id: number) {
         if (currentAnswer?.submitted) return;
         const prev = currentAnswer?.selected_option_ids ?? [];
@@ -244,7 +247,7 @@ export default function LiveQuizPage() {
                         )}
                         {!isSubmitted && (
                             <p className="mt-1.5 text-xs font-medium text-[#94a3b8] italic">
-                                {question.question_type === 1 && "Select one answer â€” submits immediately."}
+                                {question.question_type === 1 && "Select one answer, then submit."}
                                 {question.question_type === 2 && "Select all correct answers, then confirm."}
                                 {question.question_type === 3 && "Enter your answer, then confirm."}
                             </p>
@@ -279,7 +282,7 @@ export default function LiveQuizPage() {
                                             if (isSubmitted) return;
                                             question.question_type === 1 ? selectSCQ(opt.option_id) : toggleMCQ(opt.option_id);
                                         }}
-                                        disabled={isSubmitted && question.question_type === 1}
+                                        disabled={isSubmitted}
                                         className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl border text-sm font-semibold text-left transition-all cursor-pointer ${
                                             isSelected
                                                 ? "border-[#f27f0d] bg-[#fff4e8] text-[#0f172a]"
@@ -295,6 +298,14 @@ export default function LiveQuizPage() {
                                     </button>
                                 );
                             })
+                        )}
+                        {question.question_type === 1 && !isSubmitted && currentAnswer?.option_id != null && (
+                            <button
+                                onClick={() => submitAnswer({ option_id: currentAnswer.option_id })}
+                                className="mt-1 w-full h-10 rounded-xl bg-[#f27f0d] text-white text-sm font-bold cursor-pointer hover:bg-[#e0720a]"
+                            >
+                                Submit Answer
+                            </button>
                         )}
                         {question.question_type === 2 && !isSubmitted && (
                             <button onClick={submitMCQ} className="mt-1 w-full h-10 rounded-xl bg-[#f27f0d] text-white text-sm font-bold cursor-pointer hover:bg-[#e0720a]">

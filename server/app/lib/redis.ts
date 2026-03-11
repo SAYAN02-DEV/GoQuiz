@@ -2,19 +2,26 @@ import Redis from "ioredis";
 
 // Singleton Redis client shared across the Next.js server process.
 // The connection string must be set in the environment as REDIS_URL.
-// Example: redis://localhost:6379
+// Example: rediss://:password@host:6380  (Upstash / Redis Cloud / etc.)
 const globalForRedis = globalThis as unknown as { redis: Redis | undefined };
 
-export const redis: Redis =
-    globalForRedis.redis ??
-    new Redis(process.env.REDIS_URL ?? "redis://localhost:6379", {
-        lazyConnect: false,
+function createRedisClient(): Redis {
+    const client = new Redis(process.env.REDIS_URL ?? "redis://localhost:6379", {
+        lazyConnect: true,
         maxRetriesPerRequest: 3,
+        enableOfflineQueue: false,
     });
-
-if (process.env.NODE_ENV !== "production") {
-    globalForRedis.redis = redis;
+    // Prevent unhandled-error crashes; errors are surfaced per-command instead.
+    client.on("error", (err) => {
+        console.error("[redis] connection error:", err.message);
+    });
+    return client;
 }
+
+export const redis: Redis = globalForRedis.redis ?? createRedisClient();
+
+// Keep the singleton alive across hot-reloads in dev AND across invocations in prod.
+globalForRedis.redis = redis;
 
 // ─── key helpers ──────────────────────────────────────────────────────────────
 
