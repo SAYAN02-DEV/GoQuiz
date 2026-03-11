@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useParams } from "next/navigation";
 
 type OptionDraft = { text: string; is_correct: boolean };
@@ -41,6 +41,68 @@ export default function AddQuestionsPage() {
     const [saving, setSaving] = useState(false);
     const [loading, setLoading] = useState(true);
     const [isEditMode, setIsEditMode] = useState(false);
+
+    // ── AI generation state ────────────────────────────────────────────────
+    const [aiOpen, setAiOpen] = useState(false);
+    const [aiTab, setAiTab] = useState<"prompt" | "image">("prompt");
+    const [aiPrompt, setAiPrompt] = useState("");
+    const [aiCount, setAiCount] = useState(5);
+    const [aiImage, setAiImage] = useState<{ base64: string; mimeType: string; name: string } | null>(null);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState("");
+    const [aiMode, setAiMode] = useState<"append" | "replace">("append");
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    async function generateWithAI() {
+        setAiError("");
+        if (aiTab === "prompt" && !aiPrompt.trim()) { setAiError("Please enter a prompt."); return; }
+        if (aiTab === "image" && !aiImage) { setAiError("Please select an image."); return; }
+        setAiLoading(true);
+        try {
+            const body = aiTab === "prompt"
+                ? { mode: "prompt", prompt: aiPrompt, count: aiCount }
+                : { mode: "image", imageBase64: aiImage!.base64, mimeType: aiImage!.mimeType };
+
+            const res = await fetch("/api/v1/educater/ai-generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(body),
+            });
+            const data = await res.json();
+            if (!res.ok) { setAiError(data.error ?? "Generation failed"); return; }
+
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const generated: QuestionDraft[] = (data.questions as any[]).map((q: any) => ({
+                id: nextId++,
+                question_type: (q.question_type as 1 | 2 | 3) ?? 1,
+                text: q.text ?? "",
+                correct_points: q.correct_points ?? 4,
+                negative_points: q.negative_points ?? 1,
+                correct_integer_answer: q.correct_integer_answer ?? null,
+                options: (q.options ?? []).map((o: any) => ({ text: o.text ?? "", is_correct: !!o.is_correct })),
+            }));
+
+            setQuestions(prev => aiMode === "replace" ? generated : [...prev, ...generated]);
+            setAiOpen(false);
+            setAiPrompt("");
+            setAiImage(null);
+        } catch (e: unknown) {
+            setAiError(e instanceof Error ? e.message : "Unexpected error");
+        } finally {
+            setAiLoading(false);
+        }
+    }
+
+    function handleImageFile(file: File | null) {
+        if (!file) { setAiImage(null); return; }
+        const reader = new FileReader();
+        reader.onload = () => {
+            const dataUrl = reader.result as string;
+            const base64 = dataUrl.split(",")[1];
+            setAiImage({ base64, mimeType: file.type || "image/jpeg", name: file.name });
+        };
+        reader.readAsDataURL(file);
+    }
 
     useEffect(() => {
         async function loadExisting() {
@@ -193,6 +255,137 @@ export default function AddQuestionsPage() {
             </div>
 
             <div className="max-w-3xl mx-auto py-8 px-4 flex flex-col gap-5">
+
+                {/* ── AI Generate Panel ─────────────────────────────────────────── */}
+                <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+                    <button
+                        onClick={() => setAiOpen(v => !v)}
+                        className="w-full flex items-center gap-3 px-6 py-4 cursor-pointer hover:bg-[#fff9f4] transition group"
+                    >
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#f27f0d] to-[#f5a623] flex items-center justify-center shrink-0">
+                            <span className="material-symbols-outlined text-white" style={{ fontSize: 18 }}>auto_awesome</span>
+                        </div>
+                        <div className="flex-1 text-left">
+                            <p className="text-sm font-black text-[#0f172a]">Generate with AI</p>
+                            <p className="text-xs text-[#94a3b8] font-medium">From a text prompt or a photo of a question paper</p>
+                        </div>
+                        <span className={`material-symbols-outlined text-[#94a3b8] transition-transform ${aiOpen ? "rotate-180" : ""}`} style={{ fontSize: 20 }}>expand_more</span>
+                    </button>
+
+                    {aiOpen && (
+                        <div className="border-t border-[#f1ede8] px-6 py-5 flex flex-col gap-4">
+                            {/* Tab switcher */}
+                            <div className="flex gap-2">
+                                {(["prompt", "image"] as const).map(tab => (
+                                    <button
+                                        key={tab}
+                                        onClick={() => { setAiTab(tab); setAiError(""); }}
+                                        className={`flex items-center gap-1.5 h-8 px-4 rounded-lg text-xs font-bold transition cursor-pointer ${aiTab === tab ? "bg-[#f27f0d] text-white" : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"}`}
+                                    >
+                                        <span className="material-symbols-outlined" style={{ fontSize: 14 }}>
+                                            {tab === "prompt" ? "edit_note" : "photo_camera"}
+                                        </span>
+                                        {tab === "prompt" ? "Text Prompt" : "Photo of Paper"}
+                                    </button>
+                                ))}
+                            </div>
+
+                            {/* Prompt tab */}
+                            {aiTab === "prompt" && (
+                                <div className="flex flex-col gap-3">
+                                    <textarea
+                                        rows={3}
+                                        className="w-full rounded-xl border border-[#e2e8f0] px-4 py-3 text-sm font-medium text-[#0f172a] focus:outline-none focus:border-[#f27f0d] resize-none"
+                                        placeholder="e.g. Make a quiz on C++ pointers and memory management, mix of MCQ and integer questions…"
+                                        value={aiPrompt}
+                                        onChange={e => setAiPrompt(e.target.value)}
+                                    />
+                                    <div className="flex items-center gap-3">
+                                        <label className="text-xs font-bold text-[#64748b] shrink-0">Number of questions:</label>
+                                        <input
+                                            type="number"
+                                            min={1}
+                                            max={30}
+                                            value={aiCount}
+                                            onChange={e => setAiCount(Math.min(30, Math.max(1, Number(e.target.value))))}
+                                            className="w-20 h-9 rounded-xl border border-[#e2e8f0] px-3 text-sm font-semibold text-[#0f172a] focus:outline-none focus:border-[#f27f0d]"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Image tab */}
+                            {aiTab === "image" && (
+                                <div className="flex flex-col gap-3">
+                                    <div
+                                        onClick={() => fileInputRef.current?.click()}
+                                        onDragOver={e => e.preventDefault()}
+                                        onDrop={e => { e.preventDefault(); handleImageFile(e.dataTransfer.files[0] ?? null); }}
+                                        className="flex flex-col items-center justify-center gap-2 h-32 rounded-xl border-2 border-dashed border-[#e2e8f0] hover:border-[#f27f0d] cursor-pointer transition bg-[#fafaf9] hover:bg-[#fff9f4]"
+                                    >
+                                        {aiImage ? (
+                                            <>
+                                                <span className="material-symbols-outlined text-[#f27f0d]" style={{ fontSize: 28 }}>check_circle</span>
+                                                <p className="text-xs font-bold text-[#0f172a]">{aiImage.name}</p>
+                                                <p className="text-[10px] text-[#94a3b8]">Click to change</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="material-symbols-outlined text-[#94a3b8]" style={{ fontSize: 28 }}>upload_file</span>
+                                                <p className="text-xs font-semibold text-[#64748b]">Click or drag &amp; drop a photo of the question paper</p>
+                                                <p className="text-[10px] text-[#94a3b8]">JPG, PNG, WEBP supported</p>
+                                            </>
+                                        )}
+                                    </div>
+                                    <input
+                                        ref={fileInputRef}
+                                        type="file"
+                                        accept="image/jpeg,image/png,image/webp"
+                                        className="hidden"
+                                        onChange={e => handleImageFile(e.target.files?.[0] ?? null)}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Append/Replace toggle */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-xs font-bold text-[#64748b]">Add generated questions:</span>
+                                <div className="flex gap-1">
+                                    {(["append", "replace"] as const).map(m => (
+                                        <button
+                                            key={m}
+                                            onClick={() => setAiMode(m)}
+                                            className={`h-7 px-3 rounded-lg text-xs font-bold transition cursor-pointer ${aiMode === m ? "bg-[#0f172a] text-white" : "bg-[#f1f5f9] text-[#64748b] hover:bg-[#e2e8f0]"}`}
+                                        >
+                                            {m === "append" ? "After existing" : "Replace all"}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {aiError && <p className="text-xs font-bold text-red-500">{aiError}</p>}
+
+                            <button
+                                onClick={generateWithAI}
+                                disabled={aiLoading}
+                                className="self-start flex items-center gap-2 h-10 px-5 rounded-xl bg-gradient-to-r from-[#f27f0d] to-[#f5a623] text-white text-sm font-bold cursor-pointer hover:opacity-90 transition disabled:opacity-50"
+                            >
+                                {aiLoading ? (
+                                    <>
+                                        <span className="material-symbols-outlined animate-spin" style={{ fontSize: 16 }}>progress_activity</span>
+                                        Generating…
+                                    </>
+                                ) : (
+                                    <>
+                                        <span className="material-symbols-outlined" style={{ fontSize: 16 }}>auto_awesome</span>
+                                        Generate Questions
+                                    </>
+                                )}
+                            </button>
+                        </div>
+                    )}
+                </div>
+                {/* ── end AI panel ─────────────────────────────────────────────── */}
                 {questions.map((q, idx) => (
                     <div key={q.id} className="bg-white rounded-2xl shadow-sm p-6 flex flex-col gap-4">
                         {/* Question header */}
